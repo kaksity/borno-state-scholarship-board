@@ -13,6 +13,7 @@ use App\Repositories\Implementations\CountryRepositoryImplementation;
 use App\Repositories\Implementations\DocumentTypeRepositoryImplementation;
 use App\Repositories\Implementations\LgaRepositoryImplementation;
 use App\Repositories\Implementations\QualificationTypeRepositoryImplementation;
+use App\Repositories\Implementations\RemitaServiceTypeRepositoryImplementation;
 use App\Repositories\Implementations\SchoolRepositoryImplementation;
 use App\Repositories\Interfaces\AdminRepositoryInterface;
 use App\Repositories\Interfaces\ApplicantBioDataRepositoryInterface;
@@ -25,6 +26,7 @@ use App\Repositories\Interfaces\CountryRepositoryInterface;
 use App\Repositories\Interfaces\DocumentTypeRepositoryInterface;
 use App\Repositories\Interfaces\LgaRepositoryInterface;
 use App\Repositories\Interfaces\QualificationTypeRepositoryInterface;
+use App\Repositories\Interfaces\RemitaServiceTypeRepositoryInterface;
 use App\Repositories\Interfaces\SchoolRepositoryInterface;
 use Illuminate\Support\ServiceProvider;
 
@@ -91,6 +93,10 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->bind(
             AdminRepositoryInterface::class,
             AdminRepositoryImplementation::class
+        );
+        $this->app->bind(
+            RemitaServiceTypeRepositoryInterface::class,
+            RemitaServiceTypeRepositoryImplementation::class
         );
     }
 

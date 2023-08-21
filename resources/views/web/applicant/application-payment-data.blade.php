@@ -125,7 +125,7 @@
 @endsection
 
 @section('custom_scripts')
-    <script type="text/javascript" src="https://remitademo.net/payment/v1/remita-pay-inline.bundle.js"></script>
+    <script type="text/javascript" src="https://login.remita.net/payment/v1/remita-pay-inline.bundle.js"></script>
     <script>
         $(() => {
             $('#payNow').click(() => {

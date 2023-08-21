@@ -11,6 +11,7 @@ use App\Services\Interfaces\ApplicantServiceInterface;
 use App\Services\Interfaces\CountryServiceInterface;
 use App\Services\Interfaces\LgaServiceInterface;
 use App\Services\Interfaces\RemitaServiceInterface;
+use App\Services\Interfaces\RemitaServiceTypeServiceInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Env;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +24,7 @@ class ApplicantPaymentDataController extends Controller
         private ApplicantServiceInterface $applicantServiceInterface,
         private ApplicantPaymentDataServiceInterface $applicantPaymentDataServiceInterface,
         private RemitaServiceInterface $remitaServiceInterface,
+        private RemitaServiceTypeServiceInterface $remitaServiceTypeServiceInterface,
     )
     {
     }
@@ -58,10 +60,26 @@ class ApplicantPaymentDataController extends Controller
     public function store()
     {
         $loggedInApplicant = auth('applicant')->user();
+        $loggedInApplicant = $this->applicantServiceInterface->getApplicantById($loggedInApplicant->id,[
+            'applicantSchoolData.country'
+        ]);
 
         [$remitaPaymentInformation, $applicantPaymentData] = DB::transaction(function () use ($loggedInApplicant) {
-            
-            $applicationFee = env('DEFAULT_APPLICANT_PAYMENT_AMOUNT');
+
+            $getRemitaServiceTypeFilterOptions['programme'] = $loggedInApplicant->programme;
+
+            if($loggedInApplicant->programme == 'Masters' && $loggedInApplicant->applicantSchoolData->country) {
+                $getRemitaServiceTypeFilterOptions[
+                    'is_foreign'
+                ] = $loggedInApplicant->applicantSchoolData->country->is_foreign;
+            }
+
+            $remitaServiceTypes = $this->remitaServiceTypeServiceInterface->getRemitaServiceTypeFiltered(
+                $getRemitaServiceTypeFilterOptions
+            );
+
+            $remitaServiceType = $remitaServiceTypes[0];
+            $applicationFee = $remitaServiceType->amount;
 
             $remitaPaymentOptions = [
                 'surname' => $loggedInApplicant->surname,
@@ -69,7 +87,7 @@ class ApplicantPaymentDataController extends Controller
                 'email_address' => $loggedInApplicant->email,
                 'description' => 'Payment for Scholarship Application Fees',
                 'amount' => $applicationFee,
-                'service_type_id' => env('REMITA_SERVICE_TYPE_ID'),
+                'service_type_id' => $remitaServiceType->value,
             ];
 
             $applicantPayments = $this->applicantPaymentDataServiceInterface->getApplicantPaymentDataFiltered([
@@ -95,7 +113,7 @@ class ApplicantPaymentDataController extends Controller
             $paymentHash = $this->remitaServiceInterface->generateRemitaHash([
                 'merchant_id' => $remitaConfigurations['merchant_id'],
                 'service_type_id' => $remitaConfigurations['service_type_id'],
-                'amount' => env('DEFAULT_APPLICANT_PAYMENT_AMOUNT'),
+                'amount' => $applicationFee,
                 'api_key' => $remitaConfigurations['api_key'],
                 'order_id' => $applicantPaymentData->order_id,
             ], true);
@@ -109,7 +127,7 @@ class ApplicantPaymentDataController extends Controller
             $remitaPaymentInformation =  [
                 'rrr' => $applicantPaymentData->rrr,
                 'order_id' => $applicantPaymentData->order_id,
-                'amount' => env('DEFAULT_APPLICANT_PAYMENT_AMOUNT'),
+                'amount' => $applicationFee,
                 'hash' => $paymentHash,
                 'merchant_id' => $remitaConfigurations['merchant_id'],
                 'public_key' => $remitaConfigurations['public_key'],

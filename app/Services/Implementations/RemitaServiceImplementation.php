@@ -23,7 +23,15 @@ class RemitaServiceImplementation implements RemitaServiceInterface {
         ], true);
 
         $url = "{$remitaConfigurations['url']}/echannelsvc/merchant/api/paymentinit";
-        
+        dd("remitaConsumerKey={$remitaConfigurations['merchant_id']},remitaConsumerToken={$apiHash}",json_encode([
+            "serviceTypeId" => $serviceTypeId,
+            "amount" => $totalAmount,
+            "orderId" => $orderId,
+            "payerName" => "{$options['surname']} {$options['other_names']}",
+            "payerEmail" =>  $options['email_address'],
+            //"payerPhone" => $options['phone_number'],
+            "description" => $options['description'],
+        ]));
         $response = Http::withHeaders([
             "Authorization" => "remitaConsumerKey={$remitaConfigurations['merchant_id']},remitaConsumerToken={$apiHash}"
         ])->post($url,[
@@ -40,7 +48,7 @@ class RemitaServiceImplementation implements RemitaServiceInterface {
 
         $preparedJsonResponse = str_replace(['jsonp (', ')'],'',$responseData);
         $remita = json_decode($preparedJsonResponse);
-        
+        dd($remita);
         return [
             'order_id' => $orderId,
             'api_hash' => $apiHash,
@@ -55,7 +63,7 @@ class RemitaServiceImplementation implements RemitaServiceInterface {
             'merchant_id' => env('REMITA_MERCHANT_ID'),
             'api_key' => env('REMITA_API_KEY'),
             'url' => env('REMITA_URL'),
-            'service_type_id' => env('REMITA_SERVICE_TYPE_ID'),
+            // 'service_type_id' => env('REMITA_SERVICE_TYPE_ID'),
             'public_key' => env('REMITA_PUBLIC_KEY')
         ];
     }
