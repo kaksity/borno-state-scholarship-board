@@ -112,7 +112,7 @@ class ApplicantPaymentDataController extends Controller
             
             $paymentHash = $this->remitaServiceInterface->generateRemitaHash([
                 'merchant_id' => $remitaConfigurations['merchant_id'],
-                'service_type_id' => $remitaConfigurations['service_type_id'],
+                'service_type_id' => $remitaServiceType->value,
                 'amount' => $applicationFee,
                 'api_key' => $remitaConfigurations['api_key'],
                 'order_id' => $applicantPaymentData->order_id,
